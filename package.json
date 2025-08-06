@@ -1,0 +1,17 @@
+{
+  "name": "gitinspect",
+  "version": "1.0.0",
+  "description": "Ferramenta de inspeção de commits no GitLab",
+  "bin": {
+    "gitinspect": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "dayjs": "^1.11.13",
+    "exceljs": "^4.4.0",
+    "xlsx": "^0.18.5"
+  }
+}

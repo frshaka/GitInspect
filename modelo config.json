@@ -1,0 +1,7 @@
+{
+  "gitlabUrl": "https://gitlab.sankhya.com.br/api/v4",
+  "token": "SEU_TOKEN_AQUI",
+  "users": ["felipe.rosa", "joao.silva"],
+  "groupId": "1234",
+  "outputPath": "./relatorios"
+}
