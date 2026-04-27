@@ -1,0 +1,28 @@
+Como confirmar que tem branches e commits
+
+Troque o caminho para o seu repo.git:
+
+git -C "D:\Backups\GitLab\grupo1\grupo2\repoX.git" rev-parse --is-bare-repository
+git -C "D:\Backups\GitLab\grupo1\grupo2\repoX.git" show-ref --heads
+git -C "D:\Backups\GitLab\grupo1\grupo2\repoX.git" show-ref --tags
+git -C "D:\Backups\GitLab\grupo1\grupo2\repoX.git" log --oneline --decorate --all -n 20
+
+
+Se show-ref --heads listar refs, então suas branches estão OK.
+
+
+----------------------------------------------------------------------------------------------------------
+
+
+
+Como ver os fontes quando você precisar
+
+Crie uma cópia “normal” a partir do mirror:
+
+git clone "D:\Backups\GitLab\grupo1\grupo2\repoX.git" "D:\Backups\Work\repoX"
+cd "D:\Backups\Work\repoX"
+git branch -a
+git checkout nome-da-branch
+
+
+A partir daí você vai ver os arquivos fonte normalmente na pasta D:\Backups\Work\repoX.

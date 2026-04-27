@@ -1,36 +1,57 @@
 # 🕵️ GitInspect
 
-**GitInspect** é uma ferramenta em linha de comando (CLI) feita em Node.js que consulta a API do GitLab para gerar relatórios com os commits realizados por usuários específicos em repositórios de um grupo. O resultado é exportado automaticamente em formato Excel (.xlsx), com destaque visual para ausência de commits ou inatividade.
+**GitInspect** é uma ferramenta CLI em Node.js para gerenciar repositórios GitLab em massa. Oferece três funcionalidades principais:
+
+1. **Relatórios de commits**: gera planilhas Excel com atividade de usuários específicos
+2. **Renomear branches**: cria branches com novo nome em todos os projetos do grupo
+3. **Backup de repositórios**: clona mirrors de todos os repositórios para backup local
 
 ---
 
 ## 📦 Funcionalidades
 
+### Relatório de Commits
 * Consulta todos os repositórios de um grupo GitLab, incluindo subgrupos recursivamente (múltiplos níveis).
 * Filtra commits por e-mail de usuários definidos no `config.json`.
 * Busca em **todas as branches** dos repositórios.
 * Gera um relatório `.xlsx` com:
-
   * Nome do autor
   * Projeto onde comitou
   * Data do último commit
 * Exibe **"SEM COMMIT"** para usuários sem commits recentes.
 * Aplica formatação visual:
-
   * 🔴 Vermelho: sem commit ou commit com mais de 7 dias
   * ✅ Verde: commit nos últimos 7 dias
   * 🔵 Azul no cabeçalho
 * Formato de data brasileiro: `dd/MM/yyyy`
 * Permite configurar o caminho onde o arquivo será salvo
 * Substitui automaticamente arquivos existentes com o mesmo nome
+
+### Renomear Branches em Massa
+* Cria nova branch com nome diferente em todos os projetos do grupo
+* Baseada em branch existente (não deleta a original)
+* Processa subgrupos recursivamente
+
+### Backup de Repositórios
+* Clone mirror de todos os repositórios do grupo
+* Suporte a múltiplos grupos raiz (`groupIds` no config)
+* Atualização incremental (não reclona se já existe)
+* Backup paralelo com controle de concorrência
+* Opções: incluir wikis, LFS, repositórios arquivados
+* Relatório de erros em JSON
+
+### Utilitários
 * Comando interativo para abrir o arquivo de configuração via terminal
 
 ---
 
 ## ⚙️ Requisitos
 
-* Node.js (caso execute o projeto direto)
-* GitLab com token de acesso pessoal (`read_api`, `read_repository`)
+* Node.js 14+ (caso execute o projeto direto)
+* Git (para funcionalidade de backup)
+* GitLab com token de acesso pessoal:
+  * `read_api` e `read_repository` (para relatórios e rename)
+  * `write_repository` (para rename de branches)
 * Permissões de leitura no grupo/repositórios desejados
 
 ---
@@ -45,17 +66,44 @@ Antes de executar, edite o arquivo `config.json`:
   "token": "SEU_TOKEN_GITLAB",
   "users": ["huguinho@empresa.com.br", "zezinho@empresa.com.br"],
   "groupId": "1234",
-  "outputPath": "./relatorios"
+  "groupIds": ["1234", "5678"],
+  "outputPath": "./relatorios",
+  "backupDir": "./gitlab-backup-mirror",
+  "concurrency": 2,
+  "perPage": 100,
+  "includeArchived": false,
+  "includeWiki": false,
+  "includeLfs": false
 }
 ```
+
+### Campos obrigatórios
 
 | Campo        | Descrição                                                             |
 | ------------ | --------------------------------------------------------------------- |
 | `gitlabUrl`  | URL da API do seu GitLab (self-hosted ou `gitlab.com`)                |
 | `token`      | Token pessoal de acesso à API do GitLab                               |
+
+### Campos para relatório de commits
+
+| Campo        | Descrição                                                             |
+| ------------ | --------------------------------------------------------------------- |
 | `users`      | Lista de e-mails dos usuários que você deseja monitorar               |
 | `groupId`    | ID do grupo onde estão os projetos                                    |
 | `outputPath` | Caminho onde a planilha será salva (`"."` para salvar na pasta atual) |
+
+### Campos para backup
+
+| Campo             | Descrição                                                      | Padrão                    |
+| ----------------- | -------------------------------------------------------------- | ------------------------- |
+| `groupId`         | ID do grupo raiz (usado se `groupIds` não estiver definido)    | -                         |
+| `groupIds`        | Array de IDs de grupos raiz para backup (sobrescreve `groupId`)| -                         |
+| `backupDir`       | Diretório onde os mirrors serão salvos                         | `./gitlab-backup-mirror`  |
+| `concurrency`     | Número de clones/atualizações simultâneas                      | `2`                       |
+| `perPage`         | Itens por página na API                                        | `100`                     |
+| `includeArchived` | Incluir repositórios arquivados no backup                      | `false`                   |
+| `includeWiki`     | Fazer backup das wikis dos projetos                            | `false`                   |
+| `includeLfs`      | Fazer fetch de arquivos LFS                                    | `false`                   |
 
 ---
 
@@ -74,21 +122,36 @@ cd gitinspect
 npm install
 ```
 
-### 3. Executar geração da planilha
+### 3. Comandos disponíveis
 
+#### Gerar relatório de commits
 ```bash
 gitinspect run
 # ou
 node index.js run
 ```
 
-### 4. Abrir o arquivo de configuração (`config.json`)
+#### Renomear branches em massa
+```bash
+gitinspect rename <branchOrigem> <branchDestino>
+# Exemplo:
+gitinspect rename develop main
+```
 
+#### Fazer backup de repositórios
+```bash
+gitinspect backup [diretorioDestino]
+# Exemplos:
+gitinspect backup
+gitinspect backup ./meu-backup
+```
+
+#### Abrir arquivo de configuração
 ```bash
 gitinspect config
 ```
 
-> Ao final da execução, será gerado um arquivo Excel com os commits no diretório definido em `outputPath`.
+> Ao final da execução do relatório, será gerado um arquivo Excel com os commits no diretório definido em `outputPath`.
 
 ---
 
